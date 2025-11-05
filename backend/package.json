@@ -1,0 +1,20 @@
+{
+  "name": "aiml-internship-tracker-backend",
+  "version": "0.1.0",
+  "description": "Backend for AI/ML Internship Tracker (Express + MongoDB)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
