@@ -1,20 +1,21 @@
-import React, {useEffect, useState} from 'react'
+import React from 'react'
+import InternshipList from './components/InternshipList'
 
 export default function App(){
-  const [health, setHealth] = useState(null)
-
-  useEffect(()=>{
-    fetch('http://localhost:5000/health')
-      .then(r=>r.json())
-      .then(setHealth)
-      .catch(()=>setHealth({status: 'unreachable'}))
-  },[])
-
   return (
-    <div style={{fontFamily: 'Inter, system-ui, Arial', padding: 24}}>
-      <h1>AI/ML Internship Tracker — Frontend Scaffold</h1>
-      <p>Backend health: {health ? JSON.stringify(health) : 'loading...'}</p>
-      <p>Next: implement Internship List, filters and user flows.</p>
+    <div className="app-root">
+      <header className="app-header">
+        <h1>AI/ML Internship Tracker</h1>
+        <p className="subtitle">Find and track AI/ML internships in one dashboard</p>
+      </header>
+
+      <main className="app-main">
+        <InternshipList />
+      </main>
+
+      <footer className="app-footer">
+        <small>Prototype — data comes from the backend `/internships` endpoint.</small>
+      </footer>
     </div>
   )
 }
