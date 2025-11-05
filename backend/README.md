@@ -6,7 +6,17 @@ Quick start
 
 1. cd backend
 2. npm install
-3. npm run dev (requires nodemon) or npm start
+3. copy `.env.example` to `.env` and edit values
+4. npm run dev (requires nodemon) or npm start
+
+Seeding the database
+
+- Ensure MongoDB is running (local or Atlas)
+- Run: `npm run seed` to populate sample internships
+
+Next steps
+
+- Add auth endpoints, save/track endpoints, and scrapers.
 
 Endpoints
 
