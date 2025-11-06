@@ -346,18 +346,3 @@ router.delete('/:id/save', auth, async (req, res) => {
 });
 
 module.exports = router;
-        scrapedAt: payload.scrapedAt,
-        tags: payload.tags,
-        uniqueHash: payload.uniqueHash,
-        rawMeta: payload.rawMeta
-      })
-
-      res.status(201).json({ internship })
-    } catch (err) {
-      console.error('Error creating internship', err)
-      res.status(500).json({ error: 'Failed to create internship' })
-    }
-  }
-)
-
-module.exports = router

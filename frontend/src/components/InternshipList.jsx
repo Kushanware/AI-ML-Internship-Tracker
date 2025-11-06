@@ -263,9 +263,6 @@ export default function InternshipList() {
       )}
     </div>
   );
-}
-      })
-  }, [token])
 
   const handleSaveToggle = async (internshipId) => {
     if(!token){

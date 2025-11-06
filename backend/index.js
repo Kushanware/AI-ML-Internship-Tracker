@@ -14,7 +14,7 @@ const app = express();
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'production',
-  crossOriginEmbedder: process.env.NODE_ENV === 'production',
+  crossOriginEmbedder: process.env.NODE_ENV === 'production'
 }));
 
 // CORS configuration

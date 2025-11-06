@@ -1,40 +1,34 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import InternshipList from './components/InternshipList'
-import LoginPage from './components/LoginPage'
-import SignupPage from './components/SignupPage'
-import DashboardPage from './components/DashboardPage'
-import Navbar from './components/Navbar'
-import { useAuth } from './context/AuthContext'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 
-function ProtectedRoute({ children }){
-  const { user } = useAuth()
-  if(!user){
-    return <Navigate to="/login" replace />
-  }
-  return children
+function PrivateRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
-export default function App(){
+export default function App() {
   return (
-    <div className="app-root">
-      <Navbar />
-      <main className="app-main">
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<InternshipList />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          } />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <div className="min-h-screen flex items-center justify-center">
+                  <h1 className="text-3xl font-bold">Dashboard</h1>
+                </div>
+              </PrivateRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
-      </main>
-      <footer className="app-footer">
-        <small>&copy; {new Date().getFullYear()} Internship Tracker</small>
-      </footer>
-    </div>
-  )
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }

@@ -140,10 +140,3 @@ export default function InternshipCard({ internship, savedStatus, onToggleSave }
     </article>
   );
 }
-        <button className={`save-btn ${savedStatus ? 'saved' : ''}`} onClick={onToggleSave}>
-          {savedStatus ? `Saved (${savedStatus})` : 'Save'}
-        </button>
-      </div>
-    </article>
-  )
-}

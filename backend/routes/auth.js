@@ -100,7 +100,7 @@ router.post(
         message: 'Unable to create account. Please try again later.'
       });
     }
-  });
+  }
 );
 
 /**
@@ -198,49 +198,3 @@ router.get('/me', async (req, res) => {
 });
 
 module.exports = router;
-    }
-  }
-)
-
-router.post(
-  '/login',
-  [
-    body('email').isEmail().withMessage('Valid email required'),
-    body('password').notEmpty().withMessage('Password required')
-  ],
-  async (req, res) => {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() })
-    }
-
-    const { email, password } = req.body
-
-    try {
-      const user = await User.findOne({ email })
-      if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' })
-      }
-
-      const match = await bcrypt.compare(password, user.passwordHash || '')
-      if (!match) {
-        return res.status(401).json({ error: 'Invalid credentials' })
-      }
-
-      const token = issueToken(user._id.toString())
-      res.json({
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email
-        }
-      })
-    } catch (err) {
-      console.error('Error in login', err)
-      res.status(500).json({ error: 'Failed to login' })
-    }
-  }
-)
-
-module.exports = router

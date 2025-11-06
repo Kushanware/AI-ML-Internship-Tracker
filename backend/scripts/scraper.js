@@ -25,7 +25,18 @@ const PLATFORMS = {
     url: 'https://internshala.com/internships/keywords-artificial%20intelligence,machine%20learning',
     scraper: scrapeInternshala
   },
-  // Add more platforms here
+  linkedin: {
+    url: 'https://www.linkedin.com/jobs/search?keywords=ai%20intern%20OR%20ml%20intern&position=1&pageNum=0',
+    scraper: scrapeLinkedin
+  },
+  unstop: {
+    url: 'https://unstop.com/internships?filters=artificial%20intelligence,machine%20learning',
+    scraper: scrapeUnstop
+  },
+  angellist: {
+    url: 'https://angel.co/jobs?job_listing_category=Internship&keywords=ai%20ml',
+    scraper: scrapeAngelList
+  }
 };
 
 /**
@@ -184,6 +195,173 @@ async function scrapeInternshala(url) {
       console.error('[Scraper] Failed to parse listing:', err);
     }
   });
+
+  return listings;
+}
+
+/**
+ * Scraper for LinkedIn
+ */
+async function scrapeLinkedin(url) {
+  const listings = [];
+  
+  try {
+    const { data } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+      }
+    });
+
+    const $ = cheerio.load(data);
+
+    $('.job-search-card').each((i, el) => {
+      try {
+        const $el = $(el);
+        const title = $el.find('.job-search-card__title').text().trim();
+        const company = $el.find('.job-search-card__subtitle').text().trim();
+        const location = $el.find('.job-search-card__location').text().trim();
+        const link = $el.find('a.job-search-card__link').attr('href');
+        const postedDate = $el.find('time').attr('datetime');
+
+        // Check if relevant to AI/ML
+        if (AI_ML_KEYWORDS.some(pattern => pattern.test(title))) {
+          listings.push({
+            title,
+            company,
+            location,
+            remote: location.toLowerCase().includes('remote'),
+            sourceUrl: link,
+            postedAt: postedDate ? new Date(postedDate) : new Date()
+          });
+        }
+      } catch (err) {
+        console.error('[LinkedIn Scraper] Failed to parse listing:', err);
+      }
+    });
+  } catch (err) {
+    console.error('[LinkedIn Scraper] Failed:', err);
+  }
+
+  return listings;
+}
+
+/**
+ * Scraper for Unstop (formerly Dare2Compete)
+ */
+async function scrapeUnstop(url) {
+  const listings = [];
+
+  try {
+    const { data } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    const $ = cheerio.load(data);
+
+    $('.opportunity-listing-card').each((i, el) => {
+      try {
+        const $el = $(el);
+        const title = $el.find('.opp-title').text().trim();
+        const company = $el.find('.company-name').text().trim();
+        const stipendText = $el.find('.stipend-text').text().trim();
+        const locationText = $el.find('.location-text').text().trim();
+        const deadlineText = $el.find('.deadline-text').text().trim();
+        const link = $el.find('a.card-link').attr('href');
+
+        // Parse stipend
+        let stipendMin = null;
+        let stipendMax = null;
+        const stipendMatch = stipendText.match(/₹\s*([\d,]+)(?:\s*-\s*₹\s*([\d,]+))?/);
+        if (stipendMatch) {
+          stipendMin = parseInt(stipendMatch[1].replace(/,/g, ''));
+          if (stipendMatch[2]) {
+            stipendMax = parseInt(stipendMatch[2].replace(/,/g, ''));
+          }
+        }
+
+        // Parse deadline
+        let deadline = null;
+        if (deadlineText) {
+          deadline = new Date(deadlineText);
+        }
+
+        // Check if relevant to AI/ML
+        if (AI_ML_KEYWORDS.some(pattern => pattern.test(title))) {
+          listings.push({
+            title,
+            company,
+            location: locationText,
+            remote: locationText.toLowerCase().includes('remote'),
+            stipendMin,
+            stipendMax,
+            deadline,
+            sourceUrl: link ? `https://unstop.com${link}` : null,
+            postedAt: new Date()
+          });
+        }
+      } catch (err) {
+        console.error('[Unstop Scraper] Failed to parse listing:', err);
+      }
+    });
+  } catch (err) {
+    console.error('[Unstop Scraper] Failed:', err);
+  }
+
+  return listings;
+}
+
+/**
+ * Scraper for AngelList
+ */
+async function scrapeAngelList(url) {
+  const listings = [];
+
+  try {
+    const { data } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    const $ = cheerio.load(data);
+
+    $('.job-listing').each((i, el) => {
+      try {
+        const $el = $(el);
+        const title = $el.find('.job-title').text().trim();
+        const company = $el.find('.company-name').text().trim();
+        const location = $el.find('.location').text().trim();
+        const link = $el.find('a.job-link').attr('href');
+        const skillsText = $el.find('.skills-list').text().trim();
+
+        // Extract skills
+        const skills = skillsText.split(',').map(s => s.trim());
+
+        // Check if relevant to AI/ML
+        if (AI_ML_KEYWORDS.some(pattern => 
+          pattern.test(title) || 
+          skills.some(skill => pattern.test(skill))
+        )) {
+          listings.push({
+            title,
+            company,
+            location,
+            remote: location.toLowerCase().includes('remote'),
+            skills,
+            sourceUrl: link ? `https://angel.co${link}` : null,
+            postedAt: new Date()
+          });
+        }
+      } catch (err) {
+        console.error('[AngelList Scraper] Failed to parse listing:', err);
+      }
+    });
+  } catch (err) {
+    console.error('[AngelList Scraper] Failed:', err);
+  }
 
   return listings;
 }
