@@ -75,3 +75,8 @@ export default function LoginPage() {
               )}
             </button>
           </div>
+        </form>
+      </div>
+    </div>
+  );
+}

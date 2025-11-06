@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
+import LoginPage from './components/LoginPage';
+import SignupPage from './components/SignupPage';
 
 function PrivateRoute({ children }) {
   const { isAuthenticated } = useAuth();
