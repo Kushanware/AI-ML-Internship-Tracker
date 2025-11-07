@@ -1,64 +1,65 @@
-const mongoose = require('mongoose')
-const bcrypt = require('bcryptjs')
-require('dotenv').config()
-const Internship = require('../models/Internship')
-const User = require('../models/User')
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const mongoose = require('mongoose');
+const Internship = require('../models/Internship');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/aiml-internships'
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/aiml-internships';
 
-const sample = [
-  {
-    title: 'Machine Learning Intern',
-    company: 'AI Labs',
-    location: 'Remote',
-    remote: true,
-    stipendMin: 0,
-    stipendMax: 5000,
-    durationWeeks: 12,
-    skills: ['Python','PyTorch','ML'],
-    source: 'LinkedIn',
-    sourceUrl: 'https://example.com/1',
-    deadline: null,
-    postedAt: new Date()
-  },
-  {
-    title: 'Data Science Intern',
-    company: 'DataCorp',
-    location: 'Bengaluru, India',
-    remote: false,
-    stipendMin: 10000,
-    stipendMax: 20000,
-    durationWeeks: 8,
-    skills: ['Python','Pandas','SQL'],
-    source: 'Internshala',
-    sourceUrl: 'https://example.com/2',
-    deadline: new Date('2025-12-15'),
-    postedAt: new Date()
+async function run() {
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB');
+
+    const count = await Internship.estimatedDocumentCount();
+    if (count > 0) {
+      console.log(`DB already has ${count} internships. Skipping seeding.`);
+      return;
+    }
+
+    const docs = [
+      {
+        title: 'AI/ML Intern',
+        company: 'Acme AI',
+        location: 'Remote',
+        remote: true,
+        stipendMin: 10000,
+        stipendMax: 20000,
+        durationWeeks: 12,
+        skills: ['Python', 'Machine Learning', 'NLP'],
+        description: 'Work on ML models and data pipelines.',
+        source: 'Seed',
+        sourceUrl: 'https://example.com/jobs/acme-ml-intern',
+        deadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+        postedAt: new Date(),
+        tags: ['AI', 'ML', 'NLP'],
+        uniqueHash: 'acme-ml-intern-1',
+      },
+      {
+        title: 'Data Science Intern',
+        company: 'DataCorp',
+        location: 'Bengaluru',
+        remote: false,
+        stipendMin: 15000,
+        stipendMax: 25000,
+        durationWeeks: 24,
+        skills: ['Python', 'Pandas', 'Statistics'],
+        description: 'Assist with data analysis and model evaluation.',
+        source: 'Seed',
+        sourceUrl: 'https://example.com/jobs/datacorp-ds-intern',
+        deadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 21),
+        postedAt: new Date(),
+        tags: ['Data Science', 'ML'],
+        uniqueHash: 'datacorp-ds-intern-1',
+      },
+    ];
+
+    await Internship.insertMany(docs, { ordered: false });
+    console.log('Seeded internships');
+  } catch (err) {
+    console.error('Seed failed:', err.message);
+  } finally {
+    await mongoose.disconnect();
+    console.log('Disconnected');
   }
-]
-
-async function run(){
-  await mongoose.connect(MONGODB_URI, { useNewUrlParser:true, useUnifiedTopology:true })
-  console.log('Connected to MongoDB for seeding')
-  await Internship.deleteMany({})
-  const inserted = await Internship.insertMany(sample)
-  console.log(`Seeded ${inserted.length} internships`)
-
-  await User.deleteMany({})
-  const passwordHash = await bcrypt.hash('Password123!', 10)
-  const demoUser = await User.create({
-    name: 'Demo Student',
-    email: 'demo@example.com',
-    passwordHash
-  })
-
-  if (inserted[0]) {
-    demoUser.saved.push({ internship: inserted[0]._id, status: 'interested' })
-    await demoUser.save()
-  }
-
-  console.log('Seeded demo user (email: demo@example.com, password: Password123!)')
-  process.exit(0)
 }
 
-run().catch(err=>{console.error(err); process.exit(1)})
+run();

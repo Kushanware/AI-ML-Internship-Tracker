@@ -1,95 +1,48 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import api from '../lib/api'
 
-const AuthContext = createContext(null);
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
-}
+const AuthCtx = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('token'))
+  const [user, setUser] = useState(() => {
+    const raw = localStorage.getItem('user')
+    return raw ? JSON.parse(raw) : null
+  })
 
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem('aiml-token');
-      const storedUser = localStorage.getItem('aiml-user');
-
-      if (storedToken && storedUser) {
-        const userData = JSON.parse(storedUser);
-
-        axios
-          .get(`${API_URL}/auth/me`, {
-            headers: { Authorization: `Bearer ${storedToken}` },
-          })
-          .then(() => {
-            setToken(storedToken);
-            setUser(userData);
-          })
-          .catch(() => {
-            localStorage.removeItem('aiml-token');
-            localStorage.removeItem('aiml-user');
-          });
-      }
-    } catch (err) {
-      console.error('Auth initialization failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    if (token) localStorage.setItem('token', token)
+    else localStorage.removeItem('token')
+  }, [token])
 
   useEffect(() => {
-    if (token) axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    else delete axios.defaults.headers.common['Authorization'];
-  }, [token]);
+    if (user) localStorage.setItem('user', JSON.stringify(user))
+    else localStorage.removeItem('user')
+  }, [user])
 
-  const login = async (email, password) => {
-    setError(null);
-    try {
-      const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem('aiml-token', data.token);
-      localStorage.setItem('aiml-user', JSON.stringify(data.user));
-      return data;
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
-      throw err;
-    }
-  };
+  async function login(email, password) {
+    const res = await api.post('/auth/login', { email, password })
+    setToken(res.data.token)
+    setUser(res.data.user)
+  }
 
-  const register = async (name, email, password) => {
-    setError(null);
-    try {
-      const { data } = await axios.post(`${API_URL}/auth/register`, { name, email, password });
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem('aiml-token', data.token);
-      localStorage.setItem('aiml-user', JSON.stringify(data.user));
-      return data;
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-      throw err;
-    }
-  };
+  async function signup(name, email, password) {
+    const res = await api.post('/auth/register', { name, email, password })
+    setToken(res.data.token)
+    setUser(res.data.user)
+  }
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    setError(null);
-    localStorage.removeItem('aiml-token');
-    localStorage.removeItem('aiml-user');
-  };
+  function logout() {
+    setToken(null)
+    setUser(null)
+  }
 
-  const value = { user, token, loading, error, isAuthenticated: !!token, login, register, logout };
+  const value = useMemo(() => ({ token, user, login, signup, logout }), [token, user])
+  return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>
+}
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" /></div>;
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+export function useAuth() {
+  const ctx = useContext(AuthCtx)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
 }
