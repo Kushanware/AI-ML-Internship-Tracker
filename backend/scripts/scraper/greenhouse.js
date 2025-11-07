@@ -22,7 +22,8 @@ function normalize(job, company) {
   const title = job.title || '';
   const isIntern = /intern/i.test(title);
   if (!isIntern) return null;
-  const description = job.content || '';
+  const raw = job.content || '';
+  const description = require('./util').decodeHTML(raw);
   const mlLike = /(machine learning|ml|data science|ai)/i.test(`${title} ${description}`);
   if (!mlLike) return null;
   const location = job.location?.name || '';
@@ -37,12 +38,15 @@ function normalize(job, company) {
     stipendMin: undefined,
     stipendMax: undefined,
     skills: [],
-    description: description.replace(/<[^>]+>/g, '').slice(0, 4000),
+    description: String(description).replace(/<[^>]+>/g, '').slice(0, 4000),
     source: 'Greenhouse',
     sourceUrl,
     postedAt: job.updated_at ? new Date(job.updated_at) : undefined,
     tags: ['AI','ML','Data'],
   };
+  const stipend = require('./util').inferStipend(description);
+  if (stipend.min) payload.stipendMin = stipend.min;
+  if (stipend.max) payload.stipendMax = stipend.max;
   payload.uniqueHash = hashUnique(payload);
   return payload;
 }

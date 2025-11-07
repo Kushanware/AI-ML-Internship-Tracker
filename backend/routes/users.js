@@ -5,6 +5,15 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+// GET /users/:id (sanitized)
+router.get('/users/:id', auth, async (req, res) => {
+  if (req.user.id !== req.params.id) return res.status(403).json({ error: 'Forbidden' });
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const { _id, name, email, preferences } = user;
+  res.json({ id: _id, name, email, preferences: preferences || {} });
+});
+
 // GET /users/:id/saved
 router.get('/users/:id/saved', auth, async (req, res) => {
   if (req.user.id !== req.params.id) return res.status(403).json({ error: 'Forbidden' });

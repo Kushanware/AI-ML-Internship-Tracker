@@ -35,7 +35,8 @@ function normalize(job, org) {
   const isIntern = /intern/i.test(title);
   if (!isIntern) return null;
   const company = job.companyName || job.organization?.name || org;
-  const description = job.description || job.job?.descriptionHtml || '';
+  const raw = job.description || job.job?.descriptionHtml || '';
+  const description = require('./util').decodeHTML(raw);
   const mlLike = /(machine learning|ml|data science|ai|deep learning|nlp)/i.test(`${title} ${description}`);
   if (!mlLike) return null;
   const location = job.location || job.locationName || job.job?.location || '';
@@ -52,6 +53,9 @@ function normalize(job, org) {
     postedAt: job.updatedAt || job.createdAt ? new Date(job.updatedAt || job.createdAt) : undefined,
     tags: ['AI','ML','Data'],
   };
+  const stipend = require('./util').inferStipend(description);
+  if (stipend.min) payload.stipendMin = stipend.min;
+  if (stipend.max) payload.stipendMax = stipend.max;
   payload.uniqueHash = hashUnique(payload);
   return payload;
 }

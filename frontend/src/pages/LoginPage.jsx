@@ -9,8 +9,16 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
+  function validate() {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Enter a valid email'
+    if (password.length < 6) return 'Password must be at least 6 characters'
+    return ''
+  }
+
   async function onSubmit(e) {
     e.preventDefault()
+    const v = validate()
+    if (v) { setError(v); return }
     setError('')
     try {
       await login(email, password)

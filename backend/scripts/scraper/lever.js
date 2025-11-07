@@ -21,7 +21,8 @@ function normalize(job, company) {
   const title = job.text || '';
   const isIntern = /intern/i.test(title);
   if (!isIntern) return null;
-  const description = job.descriptionPlain || job.description || '';
+  const raw = job.descriptionPlain || job.description || '';
+  const description = require('./util').decodeHTML(raw);
   const mlLike = /(machine learning|ml|data science|ai)/i.test(`${title} ${description}`);
   if (!mlLike) return null;
   const location = job.categories?.location || '';
@@ -39,6 +40,9 @@ function normalize(job, company) {
     postedAt: job.createdAt ? new Date(job.createdAt) : undefined,
     tags: ['AI','ML','Data'],
   };
+  const stipend = require('./util').inferStipend(description);
+  if (stipend.min) payload.stipendMin = stipend.min;
+  if (stipend.max) payload.stipendMax = stipend.max;
   payload.uniqueHash = hashUnique(payload);
   return payload;
 }

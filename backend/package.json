@@ -11,6 +11,7 @@
     "cron": "node scripts/runCron.js",
     "scrape": "node scripts/scraper/run.js",
     "import:csv": "node scripts/import/csv.js",
+    "fix:descriptions": "node scripts/fixDescriptions.js",
     "test": "jest --runInBand",
     "test:watch": "jest --watchAll"
   },

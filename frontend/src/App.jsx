@@ -7,6 +7,7 @@ import SignupPage from './pages/SignupPage'
 import SavedPage from './pages/SavedPage'
 import SettingsPage from './pages/SettingsPage'
 import Navbar from './components/Navbar'
+import { ToastProvider } from './components/ToastProvider'
 
 function PrivateRoute({ children }) {
   const { token } = useAuth()
@@ -15,9 +16,9 @@ function PrivateRoute({ children }) {
 
 function Layout() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <Navbar />
-      <main className="max-w-5xl mx-auto p-4">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -34,7 +35,9 @@ function Layout() {
 export default function App() {
   return (
     <AuthProvider>
-      <Layout />
+      <ToastProvider>
+        <Layout />
+      </ToastProvider>
     </AuthProvider>
   )
 }
